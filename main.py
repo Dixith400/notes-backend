@@ -19,7 +19,7 @@ app = FastAPI()
 app.add_middleware(
     
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "https://notes-frontend.vercel.app"],
+    allow_origins=["http://localhost:3000", "https://notes-frontend-r8oqy8vla-dixith400-gmailcoms-projects.vercel.app"],
     allow_methods=["*"],
     allow_headers=["*"],
     
