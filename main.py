@@ -9,6 +9,11 @@ from jose import jwt
 from fastapi import Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer
 from bson import ObjectId
+from authlib.integrations.starlette_client import OAuth
+from starlette.config import Config
+from starlette.middleware.sessions import SessionMiddleware
+from starlette.requests import Request
+from starlette.responses import RedirectResponse
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
@@ -23,6 +28,20 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
     
+    
+)
+
+app.add_middleware(SessionMiddleware, secret_key=os.getenv("SECRET_KEY"))
+
+config = Config('.env')
+oauth = OAuth(config)
+
+oauth.register(
+    name='google',
+    client_id=os.getenv("GOOGLE_CLIENT_ID"),
+    client_secret=os.getenv("GOOGLE_CLIENT_SECRET"),
+    server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
+    client_kwargs={'scope': 'openid email profile'}
 )
 
 client = AsyncIOMotorClient(os.getenv("MONGO_URL"))
@@ -88,7 +107,29 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
 @app.get("/test")
 async def test_auth(current_user: str = Depends(get_current_user)):
     return {"logged in as": current_user}
+
+
+#-------------- Google Auth ------------------------
+
+@app.get("/auth/google")
+async def google_login(request: Request):
+    redirect_uri = os.getenv("BACKEND_URL") + "/auth/google/callback"
+    return await oauth.google.authorize_redirect(request, redirect_uri)
+
+@app.get("/auth/google/callback")
+async def google_callback(request: Request):
+    token = await oauth.google.authorize_access_token(request)
+    user_info = token.get("userinfo")
+    email = user_info["email"]
     
+    existing_user = await db.users.find_one({"email": email})
+    if not existing_user:
+        await db.users.insert_one({"email": email, "password": None})
+    
+    jwt_token = jwt.encode({"email": email}, SECRET_KEY, algorithm=ALGORITHM)
+    
+    frontend_url = os.getenv("FRONTEND_URL")
+    return RedirectResponse(f"{frontend_url}/notes?token={jwt_token}")   
 
 
 ### ---------------------------------              Notes apis :             --------------------------------------
