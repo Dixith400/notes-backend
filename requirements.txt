@@ -1,6 +1,7 @@
 annotated-doc==0.0.4
 annotated-types==0.7.0
 anyio==4.13.0
+Authlib==1.7.2
 bcrypt==5.0.0
 certifi==2026.5.20
 cffi==2.0.0
@@ -10,7 +11,11 @@ dnspython==2.8.0
 ecdsa==0.19.2
 fastapi==0.137.1
 h11==0.16.0
+httpcore==1.0.9
+httpx==0.28.1
 idna==3.18
+itsdangerous==2.2.0
+joserfc==1.7.1
 motor==3.7.1
 pyasn1==0.6.3
 pycparser==3.0
@@ -19,6 +24,7 @@ pydantic_core==2.46.4
 pymongo==4.17.0
 python-dotenv==1.2.2
 python-jose==3.5.0
+python-multipart==0.0.32
 rsa==4.9.1
 six==1.17.0
 starlette==1.3.1
